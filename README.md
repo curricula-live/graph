@@ -4,7 +4,7 @@ Standalone, **read-only**, interactive ontology explorer for Curricula.live.
 
 ## Status
 
-MVP source scaffold in [`curricula-live/graph`](https://github.com/curricula-live/graph). The graph data is **not bundled** because it must be projected explicitly from the owner's local ontology checkout. This also prevents archived V1 information from being accidentally checked into a public repository.
+Deployed MVP in [`curricula-live/graph`](https://github.com/curricula-live/graph). The read-only V1 graph projection is **bundled as a pinned static artifact** in `public/graph.json` so Vercel can serve the complete concept graph without database credentials or access to the private ontology repository. This bundle is explicitly for public visualization, not independent scientific certification.
 
 - React + TypeScript + Vite
 - Sigma.js 4 (WebGL) + Graphology (multi-directed graph)
@@ -38,7 +38,7 @@ npm install
 npm run dev
 ```
 
-If `graph.json` is missing, the application shows an **honest no-data state**, not fictitious ontology nodes. `public/graph.json` is gitignored by design.
+The committed `public/graph.json` is the pinned static V1 graph. The app requests it using `GET /graph.json`; Vercel's Vite preset copies `public/` assets into `dist/`. If the file is absent, the app shows an honest no-data state instead of inventing nodes. Running `npm run project:v1` locally regenerates the artifact from the archived V1 checkout; any updates to the pinned public snapshot must be reviewed and committed explicitly.
 
 Run the adapter regression tests:
 
@@ -52,7 +52,9 @@ Build frontend:
 npm run build
 ```
 
-**Release gate:** `npm run build` copies `public/graph.json` into `dist/` if present. Review repository visibility, data license/rights, dataset provenance, and V1 disclaimers before public deployment. No pipeline auto-publishes from the ontology repository.
+**Data provenance:** input `ontology-consolidated.json` from archived V1, SHA-256 `4e6ff79570b68de6a6d1d1d4136dcb413e26b999af05fa0ea19cb329ab50df58`; 8,759 entity nodes, 31,533 entity-to-entity assertions, 9 literal-valued assertions excluded. The project does not copy the full raw ontology or its RDF structural triples. The published projection contains only labels, modules, statuses, source URIs, and relation identifiers. No pipeline auto-publishes new source material from the ontology repository.
+
+**Release gate:** `npm run build` copies the checked-in `public/graph.json` into `dist/`. The static projection is accessible to anyone who can access the deployed Vercel site, regardless of GitHub repository visibility. Its scientific status remains provisional and unreviewed.
 
 ## Files
 
@@ -68,7 +70,7 @@ graph/
 │   └── project_v1.py    # Explicit V1 -> graph.json transformation
 ├── tests/
 │   └── test_projection.py
-├── public/               # Generated dataset is NOT checked into git
+├── public/graph.json     # Explicitly reviewed, committed static V1 projection
 └── package.json
 ```
 
