@@ -1,0 +1,29 @@
+{
+  "name": "@curricula-live/graph",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview",
+    "project:v1": "python3 tools/project_v1.py --input ../ontology/ontology-consolidated.json --output public/graph.json",
+    "test": "python3 -m unittest discover -s tests -v"
+  },
+  "dependencies": {
+    "graphology": "0.26.0",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "sigma": "4.0.3"
+  },
+  "devDependencies": {
+    "@types/react": "^19.1.0",
+    "@types/react-dom": "^19.1.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.9.3",
+    "vite": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=22.12.0"
+  }
+}
