@@ -8,10 +8,12 @@ Deployed MVP in [`curricula-live/graph`](https://github.com/curricula-live/graph
 
 - React + TypeScript + Vite
 - Sigma.js 4 (WebGL) + Graphology (multi-directed graph)
-- Global concept graph, pan/zoom, node selection and inspector
+- Hierarchical module -> kind -> alphabetical batch -> individual concepts; real clickable clusters and a direct concept inspector
+- Global overview aggregates source assertions between module clusters (not new asserted ontology facts)
 - Search in English, Romanian, and aliases
 - Type/module/predicate filters, recorded review status filter
-- 1–3 hop neighborhood exploration
+- 1–3 hop neighborhood exploration with hard UI performance limits of 200 concept nodes / 900 edges
+- Source data stays complete, even though WebGL only renders the current cluster, not the full corpus simultaneously
 - Immutable V1 adapter; future V2 federation adapter is a separate task
 
 ## Source boundaries
@@ -76,13 +78,13 @@ graph/
 
 ## Limitations / next milestones
 
-1. Global layout currently groups nodes deterministically by `module` rather than optimizing a force-directed layout. It is quick and stable but does not claim to expose discovered communities.
+1. Global layout clusters by the V1 source `module` field; its second tier uses recorded concept `kind` and its third tier uses alphabetical batches. These are navigational partitions, not discovered scientific communities or learned semantic similarity. Cluster-to-cluster links are aggregated counts of actual V1 assertions, and the 220 most frequent aggregate links are rendered for responsiveness.
 2. Only *entity-to-entity assertions* are visualized; literal assertions and RDF reification/formal expression nodes are intentionally excluded from the concept overview. Full RDF drilldown requires a separate mode.
 3. 31,542 V1 active assertions is an archival reported metric, not the actual displayable edge count; the adapter reports exact concept-edge counts after projection.
 4. Build per-node adjacency indexes and server-side neighborhood endpoints for imported V2 graphs that exceed in-browser practical limits.
 5. V2 source snapshots must be admitted with upstream checksums, provenance, licensing and declared review status. V2 is presently EMPTY of admitted upstream snapshots; synthetic fixtures never stand in for real data.
 6. Implement actual accessible keyboard navigation and expand UI regression tests; browser interaction has not yet been run in this environment.
-7. Optimize graph overview layout/LOD and validate rendering/performance against the full real V1 export before production.
+7. The bounded hierarchical overview and basic Chromium interaction smoke test work with the complete archived V1 projection. More extensive performance testing on phones, low-end GPUs and accessibility testing is still required.
 8. Add read-only graph API (`GET /sources`, `GET /graph/overview`, `GET /nodes/:id`, `GET /nodes/:id/neighbors`) when persistent source data is deployed.
 
 ## Proposed deployment

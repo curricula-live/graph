@@ -8,7 +8,8 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "project:v1": "python3 tools/project_v1.py --input ../ontology/ontology-consolidated.json --output public/graph.json",
-    "test": "python3 -m unittest discover -s tests -v"
+    "test": "python3 -m unittest discover -s tests -v",
+    "test:graph": "esbuild src/graph.ts --bundle --platform=node --format=esm --outfile=.graph-test.mjs && node --test tests/cluster.test.mjs"
   },
   "dependencies": {
     "graphology": "0.26.0",

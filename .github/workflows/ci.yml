@@ -17,4 +17,5 @@ jobs:
           python-version: '3.12'
       - run: npm ci
       - run: npm run build
+      - run: npm run test:graph
       - run: python -m unittest discover -s tests -v

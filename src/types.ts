@@ -1,5 +1,5 @@
 export type ReviewMode = "all" | "scientific-view";
-export type ViewMode = "overview" | "neighborhood";
+export type ViewMode = "overview" | "cluster" | "neighborhood";
 export interface ConceptNode {
   id: string; label: string; labelRo: string | null; kind: string; module: string;
   definitionStatus: string; identityStatus: string; aliases: string[];
