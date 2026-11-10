@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 80" role="img" aria-label="curricula.live three-leaf twig">
+  <defs>
+    <linearGradient id="leaf-fill" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d7e2da"/>
+      <stop offset="1" stop-color="#a9bcae"/>
+    </linearGradient>
+  </defs>
+  <g fill="none" stroke="#315c47" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M33 73C29 60 30 49 31.5 38C32.8 28 35.2 19 43.8 8" stroke-width="1.8"/>
+    <path d="M30.6 41.2C23.2 40.3 15.7 34.6 12.3 20.1C24.7 21 31.5 29.1 30.6 41.2Z" fill="url(#leaf-fill)" stroke-width="1.2"/>
+    <path d="M35.2 28.7C34.7 18.2 40.8 8.9 54.3 4.2C54.1 17.7 47.5 26.3 35.2 28.7Z" fill="url(#leaf-fill)" stroke-width="1.2"/>
+    <path d="M33.4 51.5C38.5 41.2 47 35.3 59 36.5C55.4 49 46.3 54.4 33.4 51.5Z" fill="url(#leaf-fill)" stroke-width="1.2"/>
+    <path d="M29.6 39.3L16.4 23.7M19.6 27.5l7.6 2.7M22.9 32.1l5.6 1.2" stroke-width=".7" opacity=".58"/>
+    <path d="M36.6 26.8L50.9 7.9M46.2 12.5l-5.8 1.1M43.1 17.6l5.9-1.1M39.7 22.3l5.3-.7" stroke-width=".7" opacity=".58"/>
+    <path d="M35.4 49.6L55.8 38.1M49.7 39.6l1.8 4.8M44.7 42.4l2.3 5.1M39.8 45.4l2.2 4" stroke-width=".7" opacity=".58"/>
+  </g>
+</svg>
