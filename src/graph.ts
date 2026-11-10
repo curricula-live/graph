@@ -1,7 +1,7 @@
 import Graph from 'graphology';
 import type { ConceptEdge, ConceptNode, GraphDataset, ReviewMode, ViewMode } from './types';
 
-const PALETTE = ['#7aa6ff', '#9a88ff', '#68d7b5', '#f8b96a', '#e98da9', '#9abf77', '#72bfd4', '#d1a1f3', '#f5d56e', '#9dabcb', '#ef9973', '#67beb4'];
+const PALETTE = ['#315c47', '#6e8c78', '#71978b', '#8b9c68', '#547e8d', '#9a8861', '#778f9b', '#a18982', '#789d93', '#65806d', '#9b9b76', '#7b9f7c'];
 export const MAX_VISIBLE_CONCEPTS = 200;
 export const MAX_VISIBLE_EDGES = 900;
 const MAX_AGGREGATED_EDGES = 220;
@@ -105,7 +105,7 @@ function addClusterGraph(graph: Graph, nodes: ConceptNode[], edges: ConceptEdge[
         'cluster:' + phase + ':' + row.from,
         'cluster:' + phase + ':' + row.to, {
           label: row.count.toLocaleString() + ' recorded assertions',
-          color: '#344c69',
+          color: '#c5d3c5',
           size: 0.55 + Math.min(2, Math.log2(row.count + 1) * 0.22),
         });
     });
@@ -140,7 +140,7 @@ function addConceptGraph(graph: Graph, nodes: ConceptNode[], edges: ConceptEdge[
   for (const e of included) {
     graph.addDirectedEdgeWithKey(e.id, e.source, e.target, {
       label: e.predicate,
-      color: e.status === 'inherited_unreviewed' ? '#273348' : '#526b8a',
+      color: e.status === 'inherited_unreviewed' ? '#d5ddd4' : '#a9bcad',
       size: e.inDefaultRdfGraph ? 0.7 : 0.35,
     });
   }
