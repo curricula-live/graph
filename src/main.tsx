@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import GraphCanvas from './GraphCanvas';
-import { colorForModule, linkedAssertions } from './graph';
+import { colorForModule } from './graph';
 import type { ConceptEdge, GraphDataset, ReviewMode, ViewMode } from './types';
 import './styles.css';
 
@@ -76,7 +76,19 @@ function App() {
       })
       .slice(0, 12);
   }, [data, q]);
-  const related = useMemo(() => linkedAssertions(selected, data?.edges ?? [], 60), [selected, data]);
+  const edgesByNode = useMemo(() => {
+    const index = new Map<string, ConceptEdge[]>();
+    for (const edge of data?.edges ?? []) {
+      if (!index.has(edge.source)) index.set(edge.source, []);
+      index.get(edge.source)!.push(edge);
+      if (edge.source !== edge.target) {
+        if (!index.has(edge.target)) index.set(edge.target, []);
+        index.get(edge.target)!.push(edge);
+      }
+    }
+    return index;
+  }, [data]);
+  const related = selectedId ? (edgesByNode.get(selectedId) ?? []).slice(0, 60) : [];
   const label = (id: string) => {
     const n = byId.get(id);
     return (language === 'ro' && n?.labelRo) || n?.label || id;
@@ -233,7 +245,7 @@ function App() {
         <div className="key"><span>Module</span><strong>{selected.module}</strong></div>
         <div className="key"><span>Definition</span><strong>{selected.definitionStatus}</strong></div>
         <div className="key"><span>Identity</span><strong>{selected.identityStatus}</strong></div>
-        <div className="key"><span>Recorded edges</span><strong>{(data?.edges.filter(e => e.source === selected.id || e.target === selected.id).length ?? 0).toLocaleString()}</strong></div>
+        <div className="key"><span>Recorded edges</span><strong>{(edgesByNode.get(selected.id)?.length ?? 0).toLocaleString()}</strong></div>
         <div className="detail-title">CONNECTED ASSERTIONS <small>FIRST 60</small></div>
         <div className="relationships">{related.length ? related.map(e => <button key={e.id} onClick={() => selectEdge(e)}
           className={edgeId === e.id ? 'chosen' : ''}>
