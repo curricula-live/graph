@@ -18,6 +18,9 @@ function App() {
   const [mode, setMode] = useState<ViewMode>('overview');
   const [clusterPath, setClusterPath] = useState<string[]>([]);
   const [hops, setHops] = useState(1);
+  const [expandedModules, setExpandedModules] = useState<string[]>([]);
+  const [outlineOpen, setOutlineOpen] = useState(true);
+  const [inspectorOpen, setInspectorOpen] = useState(true);
   const [language, setLanguage] = useState<'en' | 'ro'>('en');
   const [rendered, setRendered] = useState({ nodes: 0, edges: 0, represented: 0, truncated: false });
 
@@ -45,6 +48,18 @@ function App() {
   const selected = selectedId ? byId.get(selectedId) ?? null : null;
   const chosenEdge = edgeId ? edgeById.get(edgeId) ?? null : null;
   const modules = useMemo(() => [...new Set(data?.nodes.map(n => n.module) ?? [])].sort(), [data]);
+  const outline = useMemo(() => {
+    const groups = new Map<string, Map<string, number>>();
+    for (const node of data?.nodes ?? []) {
+      if (!groups.has(node.module)) groups.set(node.module, new Map());
+      const types = groups.get(node.module)!;
+      types.set(node.kind, (types.get(node.kind) ?? 0) + 1);
+    }
+    return [...groups].sort(([a], [b]) => a.localeCompare(b)).map(([name, types]) => ({
+      name, count: [...types.values()].reduce((a,b) => a+b, 0),
+      types: [...types].sort(([a],[b]) => a.localeCompare(b)).map(([name,count]) => ({name,count}))
+    }));
+  }, [data]);
   const kinds = useMemo(() => [...new Set(data?.nodes.map(n => n.kind) ?? [])].sort(), [data]);
   const predicates = useMemo(() => [...new Set(data?.edges.map(e => e.predicate) ?? [])].sort(), [data]);
   const q = search.toLocaleLowerCase().trim();
@@ -73,6 +88,7 @@ function App() {
     setModule('*');
     setKind('*');
     setMode('neighborhood');
+    setInspectorOpen(true);
   };
   const enterCluster = (path: string[]) => {
     setClusterPath(path);
@@ -95,51 +111,79 @@ function App() {
   };
 
   return <div className="app">
-    <aside className="sidebar">
-      <div className="brand"><div className="logo">◇</div><div><strong>curricula<span>.live</span></strong><small>GRAPH ATLAS</small></div></div>
-      <div className="notice">LEGACY V1 · UNREVIEWED</div>
-      <section className="group"><h3>FIND A CONCEPT</h3>
-        <input className="search" aria-label="Search concepts" value={search}
-          onChange={e => setSearch(e.target.value)} placeholder="Search EN / RO / aliases..." />
-        {search && <div className="suggestions">{matches.length ? matches.map(n =>
-          <button key={n.id} onClick={() => focus(n.id)}>
-            <span className="dot" style={{ background: colorForModule(n.module) }}/>
-            <span><strong>{language === 'ro' && n.labelRo || n.label}</strong><small>{n.module} · {n.kind}</small></span>
-          </button>) : <div className="muted">No matching concepts</div>}</div>}
-      </section>
-      <section className="group"><h3>GRAPH EXPLORER</h3>
-        <div className="tabs">
-          <button className={mode === 'overview' ? 'active' : ''} onClick={() => goToLevel(0)}>Overview</button>
-          <button className={mode === 'cluster' ? 'active' : ''} disabled={!clusterPath.length} onClick={() => goToLevel(clusterPath.length)}>Clusters</button>
-          <button className={mode === 'neighborhood' ? 'active' : ''} disabled={!selectedId} onClick={() => setMode('neighborhood')}>Neighbors</button>
-        </div>
-        {mode === 'neighborhood' && <label>Traversal depth<select value={hops} onChange={e => setHops(Number(e.target.value))}>
-          <option value={1}>1 hop</option><option value={2}>2 hops</option><option value={3}>3 hops</option></select></label>}
+    <aside className={`sidebar ${outlineOpen ? '' : 'sidebar-closed'}`}>
+      <a className="brand" href="https://curricula.live" title="curricula.live home">
+        <img className="brand-mark" src="/brand-mark.svg" alt="" />
+        <strong>curricula.live</strong>
+      </a>
+      <div className="pane-heading"><div><span className="eyebrow">KNOWLEDGE EXPLORER</span><h2>Outline</h2></div>
+        <button className="icon-button" aria-label="Collapse outline" onClick={() => setOutlineOpen(false)}>‹</button>
+      </div>
+      <div className="outline-help">Browse modules and concept types. Select a branch to explore its relationships.</div>
+      <div className="outline-tree" role="tree" aria-label="Ontology outline">
+        <button role="treeitem" aria-selected={mode === 'overview'} className={`tree-row root-row ${mode === 'overview' ? 'selected' : ''}`} onClick={() => goToLevel(0)}>
+          <span className="tree-icon">◈</span><span className="tree-name">All knowledge</span><span className="tree-count">{data?.nodes.length.toLocaleString() ?? '—'}</span>
+        </button>
+        {outline.map(group => {
+          const opened = expandedModules.includes(group.name);
+          return <div key={group.name} role="group">
+            <div className={`tree-row module-row ${clusterPath[0] === group.name && mode === 'cluster' ? 'selected' : ''}`}>
+              <button className="tree-toggle" aria-label={`${opened ? 'Collapse' : 'Expand'} ${group.name}`} aria-expanded={opened}
+                onClick={() => setExpandedModules(items => opened ? items.filter(x => x !== group.name) : [...items, group.name])}>{opened ? '⌄' : '›'}</button>
+              <button className="tree-entry" role="treeitem" onClick={() => { enterCluster([group.name]); if (!opened) setExpandedModules(items => [...items, group.name]); }}>
+                <span className="tree-icon">▦</span><span className="tree-name" title={group.name}>{group.name}</span><span className="tree-count">{group.count.toLocaleString()}</span>
+              </button>
+            </div>
+            {opened && group.types.map(item => <div key={item.name} className="tree-child">
+              <button role="treeitem" aria-selected={mode === 'cluster' && clusterPath[0] === group.name && clusterPath[1] === item.name}
+                className={`tree-row type-row ${mode === 'cluster' && clusterPath[0] === group.name && clusterPath[1] === item.name ? 'selected' : ''}`}
+                onClick={() => enterCluster([group.name, item.name])}>
+                <span className="tree-icon">·</span><span className="tree-name" title={item.name}>{item.name}</span><span className="tree-count">{item.count.toLocaleString()}</span>
+              </button>
+              {mode === 'cluster' && clusterPath[0] === group.name && clusterPath[1] === item.name && item.count > 200 &&
+                <div className="tree-batches">{Array.from({length: Math.ceil(item.count/180)}, (_,i) =>
+                  <button key={i} className={clusterPath[2] === String(i) ? 'selected' : ''}
+                    onClick={() => enterCluster([group.name,item.name,String(i)])}>Concepts {i*180+1}–{Math.min((i+1)*180,item.count)}</button>)}</div>}
+            </div>)}
+          </div>;
+        })}
+      </div>
+      <details className="filter-details"><summary>Display filters</summary>
         <label>Module<select value={module} onChange={e => setModule(e.target.value)}>
-          <option value="*">All modules</option>{modules.map(x => <option key={x} value={x}>{x}</option>)}</select></label>
+          <option value="*">All modules</option>{modules.map(x => <option key={x}>{x}</option>)}</select></label>
         <label>Concept type<select value={kind} onChange={e => setKind(e.target.value)}>
-          <option value="*">All types</option>{kinds.map(x => <option key={x} value={x}>{x}</option>)}</select></label>
-        <label>Relation type<select value={predicate} onChange={e => setPredicate(e.target.value)}>
-          <option value="*">All relations</option>{predicates.map(x => <option key={x} value={x}>{x}</option>)}</select></label>
-        <label>Assertion filter<select value={review} onChange={e => setReview(e.target.value as ReviewMode)}>
-          <option value="all">All recorded assertions</option>
-          <option value="scientific-view">Included in default V1 RDF</option>
-        </select></label>
-        <button className="secondary" onClick={reset}>Reset filters</button>
-      </section>
-      <section className="group"><h3>MODULES</h3>
-        <div className="module-list">{modules.map(x =>
-          <button className={clusterPath[0] === x && mode === 'cluster' ? 'selected' : ''} key={x} onClick={() => enterCluster([x])}>
-            <span className="dot" style={{ background: colorForModule(x) }}/>{x}
-          </button>)}</div>
-      </section>
-      <div className="sidebar-foot">Read-only · No ontology mutations.<br/>Source: curricula-live/ontology V1 archive.</div>
+          <option value="*">All types</option>{kinds.map(x => <option key={x}>{x}</option>)}</select></label>
+        <label>Relationship<select value={predicate} onChange={e => setPredicate(e.target.value)}>
+          <option value="*">All relationships</option>{predicates.map(x => <option key={x}>{x}</option>)}</select></label>
+        <label>Evidence<select value={review} onChange={e => setReview(e.target.value as ReviewMode)}>
+          <option value="all">All recorded assertions</option><option value="scientific-view">Default V1 RDF only</option></select></label>
+        <button className="secondary" onClick={() => {setModule('*');setKind('*');setPredicate('*');setReview('all');}}>Clear filters</button>
+      </details>
+      <div className="sidebar-foot">Read-only atlas · Archived V1 ontology</div>
     </aside>
 
     <main className="main">
-      <header className="topbar"><span>Knowledge Atlas <b>/</b> <strong>Explore graph</strong></span>
-        <div><span className="pill">V1 · PROVISIONAL</span>
-          <button className="lang" onClick={() => setLanguage(language === 'en' ? 'ro' : 'en')}>{language.toUpperCase()} ↔</button></div>
+      <header className="topbar">
+        <div className="topbar-leading">
+          {!outlineOpen && <button className="icon-button" aria-label="Open outline" onClick={() => setOutlineOpen(true)}>☰</button>}
+          <div className="global-search">
+            <span className="search-symbol">⌕</span>
+            <input aria-label="Search concepts" value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search concepts, topics or specifications…" />
+            {search && <div className="suggestions">{matches.length ? matches.map(n =>
+              <button key={n.id} onClick={() => focus(n.id)}>
+                <span className="dot" style={{background: colorForModule(n.module)}}/>
+                <span><strong>{(language === 'ro' && n.labelRo) || n.label}</strong><small>{n.module} · {n.kind}</small></span>
+              </button>) : <p className="muted">No matching concepts</p>}</div>}
+          </div>
+        </div>
+        <div className="toolbar-actions">
+          <button className={`view-button ${mode === 'overview' ? 'active' : ''}`} onClick={() => goToLevel(0)}>Overview</button>
+          <button className={`view-button ${mode === 'cluster' ? 'active' : ''}`} onClick={() => clusterPath.length ? goToLevel(clusterPath.length) : goToLevel(0)}>Graph</button>
+          <button className={`view-button ${mode === 'neighborhood' ? 'active' : ''}`} disabled={!selectedId} onClick={() => setMode('neighborhood')}>Focus</button>
+          <button className="icon-button" aria-label="Toggle concept inspector" aria-pressed={inspectorOpen} onClick={() => setInspectorOpen(v=>!v)}>▤</button>
+          <button className="lang" onClick={() => setLanguage(language === 'en' ? 'ro' : 'en')}>{language.toUpperCase()}</button>
+        </div>
       </header>
       <div className="graph-body">
         <div className="heading"><div><small>ONTOLOGY EXPLORATION</small>
@@ -156,6 +200,7 @@ function App() {
           <div className="counts"><div><strong>{rendered.nodes.toLocaleString()}</strong><small>VISIBLE NODES</small></div>
             <div><strong>{rendered.edges.toLocaleString()}</strong><small>{mode === 'overview' || mode === 'cluster' && clusterPath.length < 3 ? 'AGGREGATED / VISIBLE LINKS' : 'VISIBLE EDGES'}</small></div></div>
         </div>
+        {mode === 'neighborhood' && <div className="depth-control"><label htmlFor="depth">Relationship depth</label><select id="depth" value={hops} onChange={e => setHops(Number(e.target.value))}><option value={1}>1 hop</option><option value={2}>2 hops</option><option value={3}>3 hops</option></select></div>}
         {data ?
           <GraphCanvas dataset={data} selectedId={selectedId} clusterPath={clusterPath}
             predicate={predicate} module={module} kind={kind} review={review}
@@ -179,8 +224,8 @@ function App() {
       </div>
     </main>
 
-    <aside className="inspector">
-      <div className="inspector-head"><strong>INSPECTOR</strong><button aria-label="Clear selection" onClick={reset}>×</button></div>
+    <aside className={`inspector ${inspectorOpen ? "" : "inspector-closed"}`}>
+      <div className="inspector-head"><strong>CONCEPT INSPECTOR</strong><button aria-label="Close inspector" onClick={() => setInspectorOpen(false)}>×</button></div>
       {selected ? <>
         <div className="kind"><span className="dot" style={{ background: colorForModule(selected.module) }}/>{selected.kind}</div>
         <h2>{label(selected.id)}</h2>
