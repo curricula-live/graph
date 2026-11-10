@@ -28,6 +28,14 @@ function App() {
       const doc: GraphDataset = await response.json() as GraphDataset;
       if (!Array.isArray(doc.nodes) || !Array.isArray(doc.edges)) throw new Error('Malformed graph dataset.');
       setData(doc);
+      const conceptId = new URLSearchParams(window.location.search).get('concept');
+      if (conceptId && doc.nodes.some(node => node.id === conceptId)) {
+        setSelectedId(conceptId);
+        setEdgeId(null);
+        setModule('*');
+        setKind('*');
+        setMode('neighborhood');
+      }
     }).catch(e => { if (!ac.signal.aborted) setError(String(e)); });
     return () => ac.abort();
   }, []);
