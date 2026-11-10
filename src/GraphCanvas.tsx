@@ -58,17 +58,17 @@ export default function GraphCanvas(props: Props) {
       nodeReducer: (id, attrs) => {
         const focus = selectedRef.current || hoverRef.current;
         if (!focus || !graph.hasNode(focus)) return attrs;
-        if (id === focus) return { ...attrs, size: attrs.size + 3, color: '#ffffff' };
+        if (id === focus) return { ...attrs, size: attrs.size + 3, color: '#214e39' };
         if (graph.areNeighbors(focus, id)) return { ...attrs, size: attrs.size + 1 };
-        return { ...attrs, color: '#344154', label: '' };
+        return { ...attrs, color: '#c7d6c9', label: '' };
       },
       edgeReducer: (id, attrs) => {
         const focus = selectedRef.current || hoverRef.current;
         if (!focus || !graph.hasNode(focus)) return attrs;
         const [s, t] = graph.extremities(id);
         return s === focus || t === focus
-          ? { ...attrs, color: '#93b6ff', size: 1.2 }
-          : { ...attrs, color: '#243145', size: 0.25 };
+          ? { ...attrs, color: '#4e8061', size: 1.2 }
+          : { ...attrs, color: '#e2e8df', size: 0.25 };
       },
     });
     rendererRef.current = renderer;
